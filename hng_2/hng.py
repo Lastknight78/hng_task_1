@@ -1,9 +1,18 @@
 from fastapi import FastAPI, status, HTTPException
 import httpx
-from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = ["*"]
 
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = origins,
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"]
+)
 
 def is_prime(num : int):
     if num < 0:
@@ -40,7 +49,11 @@ def is_armstrong(num):
         return 'even'
     return 'odd'
 def sum_number(num):
-    sums = sum(int(i) for i in str(abs(num)))
+    if num < 0:
+        num = abs(num)
+        sums = -sum(int(i) for i in str(num))
+    else:
+        sums = sum(int(i) for i in str(abs(num)))
     return sums
 
 app = FastAPI()
