@@ -1,6 +1,7 @@
 from fastapi import FastAPI, status, HTTPException
 import httpx
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 origins = ["*"]
 
@@ -37,7 +38,8 @@ def is_perfect(num : int):
 
 def is_armstrong(num):
     if num < 0:
-        return False
+        return 'even' if num % 2 == 0 else 'odd'
+
     digits = [int(d) for d in str(num)]
     power = len(digits)
     armstrong_num = sum(i**power for i in digits)
@@ -58,25 +60,22 @@ def sum_number(num):
 
 app = FastAPI()
 
-@app.get("/number-check/{number}", status_code=status.HTTP_200_OK)
+@app.get("/classify-number", status_code=status.HTTP_200_OK)
 async def get_math_fact(number):
-    try:
-        number = int(number)
-    except ValueError:
-        raise HTTPException(status_code=400, detail={"number": number , "Error": True})
     url = f"http://numbersapi.com/{number}/math?json=true"
     async with httpx.AsyncClient() as client:
         response = await client.get(url)
-    
-    if response.status_code == 200:
         
-        return {"number": number, "fun_fact": response.json()["text"],
+    if response.status_code == 200:
+        number = int(number)
+        return {
                 "number" : number,
                 "is_prime": is_prime(number),
                 "is_perfect": is_perfect(number),
                 "properties" : is_armstrong(number),
-                "digit_sum" : sum_number(number)
+                "digit_sum" : sum_number(number),
+                "number": number, "fun_fact": response.json()["text"]
                 }
     else:
-        raise HTTPException(status_code=400, detail="Math fact not found")
+        return JSONResponse(content={"number":"alphabet","error": True},status_code=400)
 
